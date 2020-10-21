@@ -1,0 +1,22 @@
+.flex-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;  
+}
+
+#yt-url {
+  width: 550px;
+  border:transparent;
+  border-bottom: 2px solid black;
+  padding-bottom: 3px;
+}
+
+#yt-url:focus {
+  border: transparent;
+  border-bottom: 2px solid black;
+  outline:none;
+}
+
+#player {
+  outline: 1px dotted black;
+}
