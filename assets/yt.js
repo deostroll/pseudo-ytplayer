@@ -2,6 +2,7 @@ var YT_IFRAME_API = 'https://www.youtube.com/player_api';
 
 var player;
 function onYouTubePlayerAPIReady() {
+  console.log('origin:', location.origin);
   player = new YT.Player('ytplayer', {        
     width: 400,
     height: 340,
@@ -10,14 +11,16 @@ function onYouTubePlayerAPIReady() {
       onStateChange: playerStateChange
     },
     playerVars: {
-      enablejsapi: 1
+      enablejsapi: 1,
+      origin: window.location.origin
     },
-    videoId: 'M7lc1UVf-VE'    
+    videoId: 'M7lc1UVf-VE',
+    host: 'https://www.youtube.com'
   });
 };
 
 var PLAYER_STATE = {};
-
+// var readyFlag = false;
 function playerReady(event) {
   
 //   setTimeout(() => event.target.playVideo(), 1000);
@@ -30,7 +33,7 @@ function playerReady(event) {
       return carrier;
     }, PLAYER_STATE);
 
-  player.playVideo();  
+  // readyFlag = true;
 }
 
 var eventsCounter = {};
@@ -39,11 +42,12 @@ function playerStateChange(event) {
   let state = PLAYER_STATE[event.data];
   console.log(state);
   if(typeof eventsCounter[event.data] === 'undefined') {
-    eventsCounter[event.data] = { counter: 0, state }
+    eventsCounter[event.data] = { counter: 0, state, set: false }
   }
   eventsCounter[event.data].counter++;
-  if(eventsCounter[YT.PlayerState.UNSTARTED] && eventsCounter[YT.PlayerState.UNSTARTED].counter === 2) {
-    console.log('playing...');
+  if(eventsCounter[YT.PlayerState.UNSTARTED] && !eventsCounter[YT.PlayerState.UNSTARTED].set && eventsCounter[YT.PlayerState.UNSTARTED].counter === 2) {
+    console.log('playing...');    
+    eventsCounter[YT.PlayerState.UNSTARTED].set = true;
     player.playVideo();
   }
 }
@@ -68,4 +72,13 @@ $(function() {
       console.log('YT iframe api download:', err? err: 'success');
     });
   }
+  // var handle = setInterval(() => {
+  //   if(readyFlag && eventsCounter[YT.PlayerState.UNSTARTED] && eventsCounter[YT.PlayerState.UNSTARTED].set) {      
+  //     player.playVideo();
+  //     clearInterval(handle);
+  //     console.log('Actually playing...');
+  //     return;
+  //   }
+  //   console.log('tick');
+  // }, 100);
 });
