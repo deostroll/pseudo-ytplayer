@@ -9,12 +9,7 @@ function onYouTubePlayerAPIReady() {
       onReady: playerReady,
       onStateChange: playerStateChange
     },
-    videoId: 'M7lc1UVf-VE',
-    playerVars: {
-      fs: 1,      
-      controls: 1,
-      origin: window.location.origin
-    }
+    videoId: 'M7lc1UVf-VE'    
   });
 };
 
@@ -22,7 +17,8 @@ var PLAYER_STATE = {};
 
 function playerReady(event) {
   
-  setTimeout(() => event.target.playVideo(), 1000);
+//   setTimeout(() => event.target.playVideo(), 1000);
+  console.assert(player === event.target, 'not the same');
 
   PLAYER_STATE = Object.keys(YT.PlayerState)
     .reduce((carrier, key) => {
@@ -30,31 +26,45 @@ function playerReady(event) {
       carrier[value] = { state: key, value };
       return carrier;
     }, PLAYER_STATE);
+
+  player.playVideo();  
   
-  var timeoutHandle = setInterval(() => {    
-    let currentState = player.getPlayerState();
-    if(currentState === YT.PlayerState.UNSTARTED) {
-      console.log('stopping tick');
-      clearInterval(timeoutHandle);
-      // player.playVideo();  
-      setTimeout(() => {
-        console.log('replaying...');
-        $('#play').click();
-      }, 1000);
-    }    
-    console.log('interval tick');
-  }, 1000);
-  console.log('ready');
+  
+  // var timeoutHandle = setInterval(() => {    
+  //   let currentState = player.getPlayerState();
+  //   if(currentState === YT.PlayerState.UNSTARTED) {
+  //     console.log('stopping tick');
+  //     clearInterval(timeoutHandle);
+  //     // player.playVideo();  
+  //     setTimeout(() => {
+  //       console.log('replaying...');
+  //       $('#play')[0].click();
+  //     }, 10000);
+  //   }    
+  //   console.log('interval tick');
+  // }, 1000);
+  // console.log('ready');
 }
 
+var eventsCounter = {};
 function playerStateChange(event) {
-  console.log(PLAYER_STATE[event.data]);
+  // console.log(PLAYER_STATE[event.data]);
+  let state = PLAYER_STATE[event.data];
+  console.log(state);
+  if(typeof eventsCounter[event.data] === 'undefined') {
+    eventsCounter[event.data] = { counter: 0, state }
+  }
+  eventsCounter[event.data].counter++;
+  if(eventsCounter[YT.PlayerState.UNSTARTED] && eventsCounter[YT.PlayerState.UNSTARTED].counter === 2) {
+    player.playVideo();
+  }
 }
 
 $(function() {  
   let nourl = $('#no-url');
   let yt = $('#yt');
   $('#play').click(function(){
+    console.log('playing...');
     player.playVideo();
   });
   let { search } = window.location;
