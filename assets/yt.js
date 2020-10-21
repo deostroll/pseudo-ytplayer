@@ -34,6 +34,7 @@ function playerReady(event) {
     }, PLAYER_STATE);
 
   // readyFlag = true;
+  player.playVideo();
 }
 
 var eventsCounter = {};
@@ -42,12 +43,12 @@ function playerStateChange(event) {
   let state = PLAYER_STATE[event.data];
   console.log(state);
   if(typeof eventsCounter[event.data] === 'undefined') {
-    eventsCounter[event.data] = { counter: 0, state, set: false }
+    eventsCounter[event.data] = { counter: 0, state, setFlag: false }
   }
   eventsCounter[event.data].counter++;
   if(eventsCounter[YT.PlayerState.UNSTARTED] && !eventsCounter[YT.PlayerState.UNSTARTED].set && eventsCounter[YT.PlayerState.UNSTARTED].counter === 2) {
     console.log('playing...');    
-    eventsCounter[YT.PlayerState.UNSTARTED].set = true;
+    eventsCounter[YT.PlayerState.UNSTARTED].setFlag = true;
     player.playVideo();
   }
 }
@@ -55,6 +56,7 @@ function playerStateChange(event) {
 $(function() {  
   let nourl = $('#no-url');
   let yt = $('#yt');
+  let loaded = false;
   $('#play').click(function(){
     console.log('playing...');
     player.playVideo();
@@ -70,15 +72,32 @@ $(function() {
     $.getScript(YT_IFRAME_API, function(err){
       //signal success or failure here
       console.log('YT iframe api download:', err? err: 'success');
+      loaded = true;
     });
   }
-  // var handle = setInterval(() => {
-  //   if(readyFlag && eventsCounter[YT.PlayerState.UNSTARTED] && eventsCounter[YT.PlayerState.UNSTARTED].set) {      
-  //     player.playVideo();
-  //     clearInterval(handle);
-  //     console.log('Actually playing...');
-  //     return;
-  //   }
-  //   console.log('tick');
-  // }, 100);
+  var handle = setInterval(() => {
+
+    if(loaded && eventsCounter[YT.PlayerState.UNSTARTED] && eventsCounter[YT.PlayerState.UNSTARTED].setFlag) {                  
+      let curState = player.getPlayerState();
+      if(curState !== YT.PlayerState.PLAYING) {
+        player.playVideo();
+      }
+      else {
+        clearInterval(handle);
+      }
+      console.log('tick');
+    }    
+  }, 100);
+
+  setTimeout(() => {
+    console.log('Mouse event');
+    var evt = new MouseEvent("click", {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+        clientX: 20,
+        /* whatever properties you want to give it */
+    });
+    document.dispatchEvent(evt);
+  }, 20000);
 });
